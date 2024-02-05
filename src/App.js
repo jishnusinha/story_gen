@@ -1,9 +1,7 @@
-import React, { Component } from 'react';
-import APICall from './APICall';
+import React from 'react';
 import './App.css';
 import './StoryGenerator.css'; // Import CSS file for styling
 import PlaceholderLoading from 'react-placeholder-loading'
-import { HtmlEditor, Image, Inject, Link, QuickToolbar, RichTextEditorComponent, Toolbar } from '@syncfusion/ej2-react-richtexteditor';
 
 
 

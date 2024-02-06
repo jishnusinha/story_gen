@@ -40,7 +40,7 @@ class StoryGenerator extends React.Component {
       "rid": "urtlmtip2-2024",
       "dt": "0.1"
 
-    },
+    },  
     generatedStory: "",
     story_generating: false,
     archivedStory: [],
@@ -70,13 +70,9 @@ class StoryGenerator extends React.Component {
 
     // Automatically adjust textarea height
 
-
-    this.setState(prevState => ({
-      storyParams: {
-        ...prevState.storyParams.parameters,
-        [name]: value
-      }
-    }));
+    let storyParams = this.state.storyParams;
+    storyParams.parameters[name] = value;
+    this.setState({storyParams});
   };
 
   handleChange_generatedStory = (event) => {
@@ -117,7 +113,7 @@ class StoryGenerator extends React.Component {
         throw new Error('Response body is null');
       }
       const reader = response.body.getReader();
-  
+      this.setState({ streamReader: reader });
       // Function to read the stream
       const readStream = async () => {
         while (true) {
@@ -157,48 +153,25 @@ class StoryGenerator extends React.Component {
   
   
   
-
-   uint8arrayToStringMethod = (myUint8Arr)=>{
-    return String.fromCharCode.apply(null, myUint8Arr);
- }
-
+  cancelStream = () => {
+    if (this.state.streamReader) {
+      this.state.streamReader.cancel(); // Cancel the stream
+      this.setState({ story_generating: false, streamReader: null }); // Update the state
+    }
+  };
 
  
  
  
 
 
-  readStream(reader) {
-    console.log('***' ,reader);
-    reader.then(
-      (data) => {
-        return data.text().read().then(({ done, value }) => {
-          if (done) {
-            return '';
-          }
-    
-          // Assuming the data is text, you may need to handle different types of data accordingly
-          const chunk = new TextDecoder('utf-8').decode(value);
-    
-          // Update state with the new data
-          this.setState((prevState) => ({
-            data: prevState.data + chunk,
-          }));
-    
-          // Continue reading the stream
-          return this.readStream(reader);
-        });
-      }
-    )
-    .catch((error) => {
-      console.error('Error fetching data:', error);
-    })
-   
-  }
-
+ 
   render() {
-    let { plots, characters, setting, instructions, writingStyle, length } = this.state.storyParams;
+    console.log("this.state" , this.state)
+    let { plots, characters, setting, instructions,  length ,purpose ,chapters , chapter_plot , previous_chapter_summary , main_story_summary , language , point_of_view} = this.state.storyParams;
+
     let temperature = this.state.storyParams.parameters.temperature
+    let writing_style = this.state.storyParams.parameters.writing_style
     return (
       <div className="container">
         <h1>Story Generator</h1>
@@ -243,9 +216,9 @@ class StoryGenerator extends React.Component {
             <label>Writing Style</label>
             <textarea
 
-              name="writingStyle"
-              value={writingStyle}
-              onChange={this.handleChange}
+              name="writing_style"
+              value={writing_style}
+              onChange={this.handleChange_parameters}
             />
           </div>
           <div className="input-group">
@@ -276,9 +249,50 @@ class StoryGenerator extends React.Component {
             <div className="range-value">{length}</div>
           </div>
         </div>
-        <button onClick={this.handleSubmit}>Generate Story</button>
-        {this.state.story_generating && <PlaceholderLoading shape="rect" width={60} height={60} />}
 
+        <div className="form-row">
+        
+        <div className="input-group">
+            <label>Chapter Plot</label>
+            <textarea name="purpose" value={purpose} onChange={this.handleChange} />
+          </div>
+          
+          <div className="input-group">
+            <label>Chapters</label>
+            <input type="number" name="chapters" value={chapters} onChange={this.handleChange} />
+          </div>
+          <div className="input-group">
+            <label>Chapter Plot</label>
+            <textarea name="chapter_plot" value={chapter_plot} onChange={this.handleChange} />
+          </div>
+          <div className="input-group">
+            <label>previous chapter summary</label>
+            <textarea name="previous_chapter_summary" value={previous_chapter_summary} onChange={this.handleChange} />
+          </div>
+
+          
+          <div className="input-group">
+            <label>Main Story summary</label>
+            <textarea name="main_story_summary" value={main_story_summary} onChange={this.handleChange} />
+          </div>
+          
+          <div className="input-group">
+            <label>language</label>
+            <textarea name="language" value={language} onChange={this.handleChange} />
+          </div>
+          <div className="input-group">
+            <label>point_of_view</label>
+            <textarea name="point_of_view" value={point_of_view} onChange={this.handleChange} />
+          </div>
+          {/* Repeat for other fields */}
+        </div>
+        <button onClick={this.handleSubmit}>Generate Story</button>
+        {this.state.story_generating && (
+        <>
+          <PlaceholderLoading shape="rect" width={60} height={60} />
+          <button onClick={this.cancelStream}>Stop Generating</button> {/* Add this line */}
+        </>
+      )}
         <div style={{ width: '100%' }}>
           <textarea
             name="generatedStory"
